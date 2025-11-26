@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diário TOP SECRET</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Quill Editor CSS -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <!-- Quill Editor JS -->
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        /* --- 1. DESIGN SYSTEM & VARIAVEIS --- */
+        :root {
+            /* Palette */
+            --bg-base: #09090A;
+            --bg-surface: #121214;
+            --bg-card: #202024;
+            --bg-input: #121214;
+            
+            --brand-color: #00B37E; /* Neon Green */
+            --brand-dark: #00875F;
+            
+            --text-primary: #E1E1E6;
+            --text-secondary: #8D8D99;
+            --border-color: #323238;
+            --danger-color: #F75A68;
+
+            /* Typography */
+            --font-ui: 'JetBrains Mono', monospace;
+            --font-heading: 'Inter', sans-serif;
+            --font-editor: 'Courier Prime', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            outline: none;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            font-family: var(--font-heading);
+            height: 100vh;
+            overflow: hidden; /* App-like feel */
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* --- 2. UTILITÁRIOS & COMPONENTES --- */
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .justify-center { justify-content: center; }
+        .w-full { width: 100%; }
+        .h-full { height: 100%; }
+        .gap-2 { gap: 0.5rem; }
+        
+        button {
+            cursor: pointer;
+            border: none;
+            font-family: var(--font-ui);
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--brand-color);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .btn-primary:hover { background: var(--brand-dark); }
+        
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--brand-color);
+            color: var(--brand-color);
+            padding: 10px 20px;
+            border-radius: 4px;
+        }
+        .btn-secondary:hover { background: rgba(0, 179, 126, 0.1); }
+
+        .btn-danger {
+            background: rgba(247, 90, 104, 0.1);
+            color: var(--danger-color);
+            padding: 8px 16px;
+            border-radius: 4px;
+        }
+
+        .btn-icon {
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        .btn-icon:hover { color: var(--text-primary); background: var(--bg-card); }
+        .btn-icon.active { color: var(--brand-color); }
+
+        input {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 12px;
+            border-radius: 4px;
+            font-family: var(--font-ui);
+            width: 100%;
+        }
+        input:focus { border-color: var(--brand-color); }
+
+        /* --- 3. LAYOUT: LOGIN --- */
+        #auth-view {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, #121214 0%, #09090A 100%);
+        }
+        .auth-card {
+            background: var(--bg-card);
+            padding: 2rem;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 0 20px rgba(0, 179, 126, 0.05);
+        }
+        .auth-title {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-family: var(--font-ui);
+            color: var(--brand-color);
+            font-size: 1.5rem;
+            letter-spacing: -1px;
+        }
+
+        /* --- 4. LAYOUT: DASHBOARD --- */
+        #dashboard-view {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            height: 100vh;
+            overflow-y: auto;
+        }
+        .dashboard-header {
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .grid-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+            text-align: center;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: var(--brand-color);
+        }
+        .card i { font-size: 3rem; color: var(--brand-color); margin-bottom: 1rem; }
+        .card h3 { font-family: var(--font-ui); margin-bottom: 0.5rem; }
+        .card p { color: var(--text-secondary); font-size: 0.9rem; }
+
+        /* --- 5. LAYOUT: WORKSPACE (3-Column) --- */
+        #workspace-view {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        /* Sidebar (Left) */
+        .sidebar {
+            width: 260px;
+            background: var(--bg-surface);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            z-index: 20;
+            transition: width 0.3s ease, transform 0.3s ease;
+        }
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            font-family: var(--font-ui);
+            font-weight: bold;
+            color: var(--brand-color);
+        }
+        .sidebar-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem 0;
+        }
+        .nav-item {
+            padding: 12px 1.5rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: var(--font-ui);
+            font-size: 0.9rem;
+        }
+        .nav-item:hover, .nav-item.active {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 2px solid var(--brand-color);
+        }
+        .sidebar-footer {
+            padding: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Note List (Center) */
+        .note-list-panel {
+            width: 300px;
+            background: var(--bg-base);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            z-index: 10;
+            transition: width 0.3s ease, opacity 0.3s ease;
+        }
+        .note-list-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .note-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+        .note-item:hover { background: var(--bg-surface); }
+        .note-item.active { background: #161618; border-left: 2px solid var(--brand-color); }
+        .note-title { font-weight: 600; color: var(--text-primary); margin-bottom: 4px; display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;}
+        .note-date { font-size: 0.75rem; color: var(--text-secondary); font-family: var(--font-ui); }
+
+        /* Editor (Right) */
+        .editor-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-base);
+            position: relative;
+            transition: width 0.3s ease;
+        }
+        .editor-header {
+            padding: 0.8rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .editor-title-input {
+            background: transparent;
+            border: none;
+            font-size: 1.2rem;
+            font-weight: bold;
+            width: 100%;
+            padding: 0;
+        }
+        .editor-title-input:focus { border: none; }
+
+        /* --- FOCUS MODE (Full Screen) --- */
+        #workspace-view.focus-mode .sidebar,
+        #workspace-view.focus-mode .note-list-panel {
+            width: 0;
+            overflow: hidden;
+            opacity: 0;
+            border: none;
+        }
+
+        /* --- 6. QUILL CUSTOMIZATION (Lined Paper + Dark Theme) --- */
+        #editor-container {
+            border: none !important;
+            flex: 1;
+            font-family: var(--font-editor);
+            font-size: 18px;
+            color: #d1d1d1;
+        }
+        
+        .ql-toolbar {
+            border: none !important;
+            border-bottom: 1px solid var(--border-color) !important;
+            background: var(--bg-surface);
+        }
+        
+        /* Dark Theme Icons override */
+        .ql-snow .ql-stroke { stroke: var(--text-secondary) !important; }
+        .ql-snow .ql-fill { fill: var(--text-secondary) !important; }
+        .ql-snow .ql-picker { color: var(--text-secondary) !important; }
+        .ql-snow .ql-picker-options { background-color: var(--bg-card) !important; color: var(--text-primary) !important; border-color: var(--border-color) !important; }
+        
+        /* Active/Hover States */
+        .ql-snow button:hover .ql-stroke, .ql-snow .ql-picker-label:hover .ql-stroke { stroke: var(--brand-color) !important; }
+        .ql-snow button.ql-active .ql-stroke { stroke: var(--brand-color) !important; }
+
+        /* LINED PAPER EFFECT */
+        .ql-editor {
+            padding: 30px 40px !important;
+            line-height: 30px; /* Must match bg size */
+            background-image: linear-gradient(transparent 96%, #28282d 97%);
+            background-size: 100% 30px;
+            background-attachment: local;
+            position: relative;
+        }
+        /* Red Margin Line */
+        .ql-editor::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 30px;
+            width: 1px;
+            background: rgba(247, 90, 104, 0.4); /* Faded red */
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* --- 7. MODALS & OVERLAYS --- */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 2rem;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .modal-header { font-size: 1.2rem; font-weight: bold; margin-bottom: 1rem; color: var(--text-primary); }
+        .modal-body { margin-bottom: 1.5rem; color: var(--text-secondary); }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+        #loading-overlay {
+            background: var(--bg-base);
+            color: var(--brand-color);
+            font-family: var(--font-ui);
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 3px solid rgba(0, 179, 126, 0.3);
+            border-top-color: var(--brand-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* --- 8. RESPONSIVIDADE (MOBILE) --- */
+        .mobile-toggle { display: none; }
+        
+        @media (max-width: 768px) {
+            .mobile-toggle { display: block; }
+            
+            /* Sidebar is hidden by default (Off-canvas) */
+            .sidebar {
+                position: absolute;
+                height: 100%;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.open { transform: translateX(0); box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
+
+            /* Note list takes full width initially */
+            .note-list-panel { width: 100%; }
+
+            /* Editor takes full screen over list */
+            .editor-panel {
+                position: absolute;
+                top: 0; left: 0; width: 100%; height: 100%;
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+                z-index: 50;
+            }
+            .editor-panel.open { transform: translateX(0); }
+
+            .dashboard-header { flex-direction: column; gap: 1rem; align-items: flex-start; }
+            
+            /* Adjust note header for mobile */
+            .note-list-header { gap: 10px; }
+            
+            /* Hide Focus Mode button on mobile since it's already full screen */
+            #focus-toggle-btn { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- LOADING OVERLAY -->
+    <div id="loading-overlay" class="overlay">
+        <div class="spinner"></div>
+        <div>DECRYPTING DATA...</div>
+    </div>
+
+    <!-- GENERIC MODAL -->
+    <div id="modal-overlay" class="overlay hidden">
+        <div class="modal-box">
+            <div id="modal-title" class="modal-header">Title</div>
+            <div id="modal-content" class="modal-body">Content</div>
+            <div id="modal-actions" class="modal-actions">
+                <button id="modal-cancel" class="btn-secondary">Cancelar</button>
+                <button id="modal-confirm" class="btn-primary">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- INPUT MODAL (NOVO) -->
+    <div id="input-modal-overlay" class="overlay hidden">
+        <div class="modal-box">
+            <div class="modal-header">NOVO ARQUIVO</div>
+            <div class="modal-body">
+                <label style="font-size: 0.8rem; color: var(--text-secondary);">NOME DO DOSSIÊ</label>
+                <input type="text" id="input-modal-value" placeholder="Ex: Operação Omega" style="margin-top: 0.5rem;" onkeydown="if(event.key === 'Enter') confirmInputModal()">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closeInputModal()">CANCELAR</button>
+                <button class="btn-primary" onclick="confirmInputModal()">CRIAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AUTH VIEW -->
+    <div id="auth-view" class="hidden">
+        <div class="auth-card">
+            <div class="auth-title">
+                <i class="ph ph-lock-key"></i><br>
+                TOP SECRET ACCESS
+            </div>
+            <form id="auth-form" onsubmit="handleAuth(event)">
+                <div style="margin-bottom: 1rem;">
+                    <label style="color: var(--text-secondary); font-size: 0.8rem; font-family: var(--font-ui);">AGENT ID (EMAIL)</label>
+                    <input type="email" id="email" required placeholder="agent@classified.com">
+                </div>
+                <div style="margin-bottom: 1.5rem; position: relative;">
+                    <label style="color: var(--text-secondary); font-size: 0.8rem; font-family: var(--font-ui);">PASSPHRASE</label>
+                    <input type="password" id="password" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn-primary w-full">AUTHENTICATE</button>
+                <p id="auth-error" style="color: var(--danger-color); font-size: 0.8rem; margin-top: 1rem; text-align: center; height: 1rem;"></p>
+                <p style="text-align: center; margin-top: 1rem; font-size: 0.8rem; color: var(--text-secondary); cursor: pointer;" onclick="toggleAuthMode()">
+                    <span id="auth-switch-text">Sem credenciais? Solicitar Acesso</span>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- DASHBOARD VIEW -->
+    <div id="dashboard-view" class="hidden">
+        <div class="dashboard-header">
+            <div>
+                <h1 style="font-family: var(--font-ui); color: var(--brand-color);">DASHBOARD OPERACIONAL</h1>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;" id="user-display">Agent: Unknown</p>
+            </div>
+            <button class="btn-secondary" onclick="signOutUser()">LOGOUT</button>
+        </div>
+
+        <div class="grid-cards">
+            <!-- Calendar Mode Card -->
+            <div class="card" onclick="openWorkspace('calendar')">
+                <i class="ph ph-calendar-blank"></i>
+                <h3>Calendário de Missões</h3>
+                <p>Acessar registros por data.</p>
+            </div>
+
+            <!-- Notebooks Mode Card -->
+            <div class="card" onclick="openWorkspace('notebooks')">
+                <i class="ph ph-notebook"></i>
+                <h3>Meus Cadernos</h3>
+                <p>Acessar arquivos por dossiê.</p>
+            </div>
+
+            <!-- New Notebook Action -->
+            <div class="card" style="border-style: dashed;" onclick="promptNewNotebook()">
+                <i class="ph ph-plus-circle"></i>
+                <h3>Novo Dossiê</h3>
+                <p>Criar novo caderno criptografado.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- WORKSPACE VIEW -->
+    <div id="workspace-view" class="hidden">
+        
+        <!-- SIDEBAR -->
+        <div id="sidebar" class="sidebar">
+            <div class="sidebar-header flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <span id="sidebar-label">ARQUIVOS</span>
+                    <!-- Botão de adicionar removido conforme solicitação -->
+                </div>
+                <button class="btn-icon mobile-toggle" onclick="toggleSidebar()"><i class="ph ph-x"></i></button>
+            </div>
+            <div id="notebook-list" class="sidebar-list">
+                <!-- Notebooks injected via JS -->
+            </div>
+            <div class="sidebar-footer">
+                <button class="btn-secondary w-full" onclick="showView('dashboard-view')">
+                    <i class="ph ph-house"></i> Dashboard
+                </button>
+            </div>
+        </div>
+
+        <!-- NOTE LIST -->
+        <div class="note-list-panel">
+            <div class="note-list-header">
+                <button class="btn-icon mobile-toggle" onclick="toggleSidebar()"><i class="ph ph-list"></i></button>
+                <span id="list-title" style="font-weight: bold; font-family: var(--font-ui);">LOADING...</span>
+                <button class="btn-icon" onclick="createNewNote()"><i class="ph ph-plus"></i></button>
+            </div>
+            <!-- Date Filter (Visible only in Calendar Mode) -->
+            <div id="date-filter-container" class="hidden" style="padding: 10px; border-bottom: 1px solid var(--border-color);">
+                <input type="date" id="date-picker" onchange="loadNotesByDate(this.value)">
+            </div>
+            
+            <div id="notes-list-container" style="overflow-y: auto; flex: 1;">
+                <!-- Notes injected via JS -->
+            </div>
+        </div>
+
+        <!-- EDITOR -->
+        <div id="editor-panel" class="editor-panel">
+            <div class="editor-header">
+                <div class="flex items-center gap-2" style="flex:1;">
+                    <button class="btn-icon mobile-toggle" onclick="closeEditorMobile()"><i class="ph ph-arrow-left"></i></button>
+                    <!-- Focus Mode Toggle -->
+                    <button id="focus-toggle-btn" class="btn-icon" onclick="toggleFocusMode()" title="Modo Foco (Tela Cheia)">
+                        <i class="ph ph-arrows-out-simple"></i>
+                    </button>
+                    <input type="text" id="note-title-input" class="editor-title-input" placeholder="Título da Nota..." oninput="markUnsaved()">
+                </div>
+                <div class="flex items-center gap-2">
+                    <span id="save-status" style="font-size: 0.7rem; color: var(--text-secondary); font-family: var(--font-ui);">SYNCED</span>
+                    <button class="btn-icon" style="color: var(--brand-color);" onclick="saveCurrentNote()"><i class="ph ph-floppy-disk"></i></button>
+                    <button class="btn-icon" style="color: var(--danger-color);" onclick="deleteCurrentNote()"><i class="ph ph-trash"></i></button>
+                </div>
+            </div>
+            <div id="editor-container"></div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+        import { getFirestore, collection, doc, addDoc, getDocs, updateDoc, deleteDoc, query, where, orderBy, onSnapshot, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+        // --- CONFIG & INIT ---
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'top-secret-app';
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- STATE ---
+        let currentUser = null;
+        let isLoginMode = true;
+        let currentMode = 'notebooks'; // 'notebooks' or 'calendar'
+        let activeNotebookId = null;
+        let activeNoteId = null;
+        let quill = null;
+        let unsavedChanges = false;
+        let notesListener = null; // Unsubscribe function
+        let notebooksListener = null;
+        let onInputConfirm = null; // Callback for input modal
+        let isFocusMode = false;
+
+        // --- UI ELEMENTS ---
+        const views = {
+            auth: document.getElementById('auth-view'),
+            dashboard: document.getElementById('dashboard-view'),
+            workspace: document.getElementById('workspace-view'),
+            loading: document.getElementById('loading-overlay')
+        };
+        const modal = {
+            overlay: document.getElementById('modal-overlay'),
+            title: document.getElementById('modal-title'),
+            content: document.getElementById('modal-content'),
+            confirmBtn: document.getElementById('modal-confirm'),
+            cancelBtn: document.getElementById('modal-cancel')
+        };
+
+        // --- AUTHENTICATION LOGIC ---
+        // Setup Auth (Priority: Custom Token > Anonymous)
+        const initAuth = async () => {
+             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                try {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } catch (e) {
+                    console.error("Custom token fail", e);
+                }
+            } else {
+                 // Wait for explicit login on the form, do not auto-login anonymously for this specific app type
+                 // unless needed for persistence demo. But user requested login screen.
+            }
+        };
+        initAuth();
+
+        onAuthStateChanged(auth, (user) => {
+            views.loading.classList.add('hidden');
+            currentUser = user;
+            if (user) {
+                document.getElementById('user-display').textContent = `Agent: ${user.email || 'Anonymous'}`;
+                showView('dashboard-view');
+            } else {
+                showView('auth-view');
+            }
+        });
+
+        window.handleAuth = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorText = document.getElementById('auth-error');
+            errorText.textContent = '';
+            
+            views.loading.classList.remove('hidden');
+
+            try {
+                if (isLoginMode) {
+                    await signInWithEmailAndPassword(auth, email, password);
+                } else {
+                    await createUserWithEmailAndPassword(auth, email, password);
+                }
+            } catch (error) {
+                console.error(error);
+                let msg = "Falha na operação.";
+                if(error.code === 'auth/wrong-password') msg = "Senha inválida.";
+                if(error.code === 'auth/user-not-found') msg = "Agente não encontrado.";
+                if(error.code === 'auth/email-already-in-use') msg = "ID já registrado.";
+                if(error.code === 'auth/weak-password') msg = "Senha muito fraca.";
+                errorText.textContent = msg;
+                views.loading.classList.add('hidden');
+            }
+        };
+
+        window.toggleAuthMode = () => {
+            isLoginMode = !isLoginMode;
+            document.querySelector('.auth-card button').textContent = isLoginMode ? 'AUTHENTICATE' : 'REGISTER AGENT';
+            document.getElementById('auth-switch-text').textContent = isLoginMode ? 'Sem credenciais? Solicitar Acesso' : 'Já possui acesso? Entrar';
+        };
+
+        window.signOutUser = () => signOut(auth);
+
+        // --- VIEW MANAGEMENT ---
+        window.showView = (viewId) => {
+            // Cleanup listeners when leaving workspace
+            if (viewId !== 'workspace-view') {
+                if(notesListener) notesListener();
+                if(notebooksListener) notebooksListener();
+                // Reset Focus Mode when leaving workspace
+                isFocusMode = false;
+                document.getElementById('workspace-view').classList.remove('focus-mode');
+            }
+
+            Object.values(views).forEach(el => el.classList.add('hidden'));
+            if(viewId === 'auth-view') views.auth.classList.remove('hidden');
+            if(viewId === 'dashboard-view') views.dashboard.classList.remove('hidden');
+            if(viewId === 'workspace-view') {
+                views.workspace.classList.remove('hidden');
+                initQuill();
+            }
+        };
+
+        window.openWorkspace = (mode) => {
+            currentMode = mode;
+            showView('workspace-view');
+            loadNotebooks(); // Always load sidebar (but content might differ)
+            
+            const listTitle = document.getElementById('list-title');
+            const dateFilter = document.getElementById('date-filter-container');
+            const editorPanel = document.getElementById('editor-panel');
+            const sidebarList = document.getElementById('notebook-list');
+            const sidebarLabel = document.getElementById('sidebar-label');
+            
+            // Reset UI
+            editorPanel.classList.remove('open'); // Mobile close
+            document.getElementById('notes-list-container').innerHTML = '';
+            
+            if (mode === 'calendar') {
+                listTitle.textContent = "CALENDÁRIO";
+                dateFilter.classList.remove('hidden');
+                sidebarLabel.textContent = "CALENDÁRIO";
+                // Hide notebook list in calendar mode
+                sidebarList.style.display = 'none';
+                
+                // Set today as default
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('date-picker').value = today;
+                loadNotesByDate(today);
+            } else {
+                listTitle.textContent = "SELECIONE UM DOSSIÊ";
+                dateFilter.classList.add('hidden');
+                sidebarLabel.textContent = "ARQUIVOS";
+                sidebarList.style.display = 'block'; // Show notebooks
+                // Wait for notebook selection
+            }
+        };
+
+        window.toggleFocusMode = () => {
+            isFocusMode = !isFocusMode;
+            const ws = document.getElementById('workspace-view');
+            const btnIcon = document.querySelector('#focus-toggle-btn i');
+            
+            if (isFocusMode) {
+                ws.classList.add('focus-mode');
+                btnIcon.classList.replace('ph-arrows-out-simple', 'ph-arrows-in-simple');
+            } else {
+                ws.classList.remove('focus-mode');
+                btnIcon.classList.replace('ph-arrows-in-simple', 'ph-arrows-out-simple');
+            }
+        };
+
+        // --- FIRESTORE: NOTEBOOKS ---
+        function loadNotebooks() {
+            if (!currentUser) return;
+            const list = document.getElementById('notebook-list');
+            list.innerHTML = '<div style="padding:1rem; text-align:center; opacity:0.5">Decodificando...</div>';
+
+            const q = query(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'notebooks'), orderBy('createdAt', 'desc'));
+            
+            // Realtime listener for notebooks
+            notebooksListener = onSnapshot(q, (snapshot) => {
+                list.innerHTML = '';
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const div = document.createElement('div');
+                    div.className = `nav-item ${activeNotebookId === docSnap.id ? 'active' : ''}`;
+                    div.innerHTML = `<i class="ph ph-folder"></i> <span>${data.name}</span> <i class="ph ph-trash" style="margin-left:auto; font-size:0.8rem; opacity:0.5;" onclick="confirmDeleteNotebook('${docSnap.id}', event)"></i>`;
+                    div.onclick = (e) => {
+                        if(e.target.classList.contains('ph-trash')) return; // handled by trash icon
+                        selectNotebook(docSnap.id, data.name);
+                    };
+                    list.appendChild(div);
+                });
+            }, (error) => {
+                console.error("Rules error?", error);
+                if(error.code === 'permission-denied') {
+                    showModal("Acesso Negado", "Banco de dados bloqueado. Verifique as regras de segurança.");
+                }
+            });
+        }
+
+        // Updated New Notebook Logic with Input Modal
+        window.openNewNotebookModal = () => {
+            document.getElementById('input-modal-value').value = '';
+            document.getElementById('input-modal-overlay').classList.remove('hidden');
+            setTimeout(() => document.getElementById('input-modal-value').focus(), 100);
+            
+            onInputConfirm = (name) => {
+                if(name) createNotebook(name);
+            };
+        };
+
+        window.closeInputModal = () => {
+            document.getElementById('input-modal-overlay').classList.add('hidden');
+            onInputConfirm = null;
+        };
+
+        window.confirmInputModal = () => {
+            const val = document.getElementById('input-modal-value').value;
+            if(val && onInputConfirm) {
+                onInputConfirm(val);
+                closeInputModal();
+            }
+        };
+
+        window.promptNewNotebook = () => {
+            // Replaced native prompt with custom modal
+            window.openNewNotebookModal();
+        };
+
+        async function createNotebook(name) {
+            try {
+                await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'notebooks'), {
+                    name: name,
+                    createdAt: serverTimestamp()
+                });
+                if(currentMode === 'calendar') {
+                   // Stay on calendar, but notebook is created
+                } else {
+                   // Refresh handled by listener
+                }
+            } catch (e) {
+                showModal("Erro", "Falha ao criar caderno: " + e.message);
+            }
+        }
+
+        function selectNotebook(id, name) {
+            currentMode = 'notebooks';
+            activeNotebookId = id;
+            document.getElementById('list-title').textContent = name.toUpperCase();
+            document.getElementById('date-filter-container').classList.add('hidden');
+            
+            // Visual Update Sidebar
+            document.querySelectorAll('#notebook-list .nav-item').forEach(el => el.classList.remove('active'));
+            // Find the clicked one logic is handled by re-render usually, but lets just load notes
+            loadNotesByNotebook(id);
+            
+            // Mobile: Close sidebar
+            document.getElementById('sidebar').classList.remove('open');
+        }
+
+        window.confirmDeleteNotebook = (id, e) => {
+            e.stopPropagation();
+            showModal("Destruir Dossiê?", "Isso apagará permanentemente o caderno e TODAS as notas contidas nele. Impossível recuperar.", async () => {
+                try {
+                    // Cascade Delete: Get notes first
+                    const notesQ = query(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'notes'), where('notebookId', '==', id));
+                    const snapshot = await getDocs(notesQ);
+                    
+                    const batch = writeBatch(db);
+                    snapshot.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                    // Delete Notebook
+                    batch.delete(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'notebooks', id));
+                    
+                    await batch.commit();
+                    
+                    if(activeNotebookId === id) {
+                        document.getElementById('notes-list-container').innerHTML = '';
+                        document.getElementById('list-title').textContent = 'SELECIONE';
+                        quill.setText('');
+                        activeNotebookId = null;
+                        activeNoteId = null;
+                    }
+                } catch (err) {
+                    showModal("Erro", "Falha na destruição: " + err.message);
+                }
+            });
+        };
+
+
+        // --- FIRESTORE: NOTES ---
+        // FIX: Removed orderBy('createdAt', 'desc') inside the query to avoid "Missing Index" error.
+        // Sorting is now handled in memory within subscribeNotes().
+        function loadNotesByNotebook(notebookId) {
+            const q = query(
+                collection(db, 'artifacts', appId, 'users', currentUser.uid, 'notes'), 
+                where('notebookId', '==', notebookId)
+                // orderBy removed from here
+            );
+            subscribeNotes(q);
+        }
+
+        // FIX: Removed orderBy('createdAt', 'desc') inside the query to avoid "Missing Index" error.
+        window.loadNotesByDate = (dateString) => {
+            const q = query(
+                collection(db, 'artifacts', appId, 'users', currentUser.uid, 'notes'),
+                where('dateString', '==', dateString)
+                // orderBy removed from here
+            );
+            subscribeNotes(q);
+        }
+
+        function subscribeNotes(queryRef) {
+            if (notesListener) notesListener(); // Unsub previous
+            
+            const container = document.getElementById('notes-list-container');
+            container.innerHTML = '<div style="padding:1rem; opacity:0.5">Carregando dados...</div>';
+
+            notesListener = onSnapshot(queryRef, (snapshot) => {
+                container.innerHTML = '';
+                if(snapshot.empty) {
+                    container.innerHTML = '<div style="padding:1rem; opacity:0.5; font-style:italic;">Nenhum registro encontrado.</div>';
+                    return;
+                }
+                
+                // FIX: Sorting Logic implemented here (Client-side)
+                let notes = [];
+                snapshot.forEach(doc => {
+                    notes.push({ id: doc.id, ...doc.data() });
+                });
+
+                notes.sort((a, b) => {
+                    const dateA = a.createdAt ? a.createdAt.toMillis() : 0;
+                    const dateB = b.createdAt ? b.createdAt.toMillis() : 0;
+                    return dateB - dateA; // Descending order (Newest first)
+                });
+
+                notes.forEach(data => {
+                    const el = document.createElement('div');
+                    el.className = `note-item ${activeNoteId === data.id ? 'active' : ''}`;
+                    el.onclick = () => loadNoteContent(data.id, data);
+                    el.innerHTML = `
+                        <div class="note-title">${data.title || 'Sem Título'}</div>
+                        <div class="note-date">${data.dateString || 'Sem data'}</div>
+                    `;
+                    container.appendChild(el);
+                });
+            });
+        }
+
+        window.createNewNote = async () => {
+            if(currentMode === 'notebooks' && !activeNotebookId) {
+                showModal("Aviso", "Selecione um caderno primeiro.");
+                return;
+            }
+
+            const today = new Date().toISOString().split('T')[0];
+            const newNote = {
+                title: 'Nova Nota Confidencial',
+                content: '',
+                notebookId: activeNotebookId || 'general', // Fallback if in calendar mode (simplified)
+                dateString: today,
+                createdAt: serverTimestamp()
+            };
+
+            // If in calendar mode and no notebook selected, we might need a default notebook or ask user.
+            // For simplicity, if in calendar mode, we ask to pick a notebook if activeNotebookId is null
+            if(!activeNotebookId) {
+                // Quick fix: Fetch the first notebook or create a 'General' one.
+                // For this demo, we'll block creation in Calendar mode without active context, or just alert.
+                showModal("Atenção", "Para criar uma nota, vá para 'Meus Cadernos' e selecione um destino.");
+                return;
+            }
+
+            try {
+                const docRef = await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'notes'), newNote);
+                loadNoteContent(docRef.id, newNote);
+            } catch (e) {
+                console.error(e);
+            }
+        };
+
+        function loadNoteContent(id, data) {
+            activeNoteId = id;
+            document.getElementById('note-title-input').value = data.title;
+            // Set content silently
+            quill.clipboard.dangerouslyPasteHTML(data.content || '');
+            unsavedChanges = false;
+            updateSaveStatus('SYNCED');
+
+            // UI Updates
+            document.querySelectorAll('.note-item').forEach(el => el.classList.remove('active'));
+            // Note: Re-adding active class is tricky inside snapshot, but the click handles logical state.
+            
+            // Mobile Open
+            document.getElementById('editor-panel').classList.add('open');
+        }
+
+        // --- EDITOR LOGIC ---
+        function initQuill() {
+            if(quill) return;
+            quill = new Quill('#editor-container', {
+                theme: 'snow',
+                modules: {
+                    toolbar: [
+                        [{ 'header': [1, 2, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        [{ 'color': [] }, { 'background': [] }],
+                        ['clean']
+                    ]
+                },
+                placeholder: 'Inicie o relatório...'
+            });
+
+            quill.on('text-change', () => {
+                markUnsaved();
+            });
+        }
+
+        window.markUnsaved = () => {
+            unsavedChanges = true;
+            updateSaveStatus('UNSAVED');
+        };
+
+        function updateSaveStatus(status) {
+            const el = document.getElementById('save-status');
+            el.textContent = status;
+            el.style.color = status === 'UNSAVED' ? 'var(--danger-color)' : 'var(--text-secondary)';
+        }
+
+        window.saveCurrentNote = async () => {
+            if (!activeNoteId || !currentUser) return;
+            
+            updateSaveStatus('SAVING...');
+            const title = document.getElementById('note-title-input').value;
+            const content = quill.root.innerHTML;
+
+            try {
+                const noteRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'notes', activeNoteId);
+                await updateDoc(noteRef, {
+                    title: title,
+                    content: content,
+                    updatedAt: serverTimestamp()
+                });
+                unsavedChanges = false;
+                updateSaveStatus('SYNCED');
+            } catch (e) {
+                showModal("Erro de Salvamento", e.message);
+                updateSaveStatus('ERROR');
+            }
+        };
+
+        window.deleteCurrentNote = () => {
+            if(!activeNoteId) return;
+            showModal("Apagar Nota?", "Essa ação é irreversível.", async () => {
+                await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'notes', activeNoteId));
+                activeNoteId = null;
+                quill.setText('');
+                document.getElementById('note-title-input').value = '';
+                closeEditorMobile();
+            });
+        };
+
+        // --- UI HELPERS ---
+        window.toggleSidebar = () => {
+            document.getElementById('sidebar').classList.toggle('open');
+        };
+
+        window.closeEditorMobile = () => {
+            document.getElementById('editor-panel').classList.remove('open');
+            // Auto save on close logic could go here
+            if(unsavedChanges) saveCurrentNote();
+        };
+
+        // Custom Modal Logic
+        window.showModal = (title, content, onConfirm = null) => {
+            modal.title.textContent = title;
+            modal.content.textContent = content;
+            modal.overlay.classList.remove('hidden');
+            
+            modal.cancelBtn.onclick = () => modal.overlay.classList.add('hidden');
+            
+            if (onConfirm) {
+                modal.confirmBtn.classList.remove('hidden');
+                modal.confirmBtn.onclick = () => {
+                    onConfirm();
+                    modal.overlay.classList.add('hidden');
+                };
+            } else {
+                modal.confirmBtn.classList.add('hidden');
+            }
+        };
+
+    </script>
+</body>
+</html>
